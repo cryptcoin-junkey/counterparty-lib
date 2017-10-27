@@ -93,6 +93,12 @@ def check_backend_state():
     time_behind = time.time() - cblock.nTime   # TODO: Block times are not very reliable.
     if time_behind > 60 * 60 * 2:   # Two hours.
         raise BackendError('Bitcoind is running about {} hours behind.'.format(round(time_behind / 3600)))
+
+    # check backend index
+    blocks_behind = backend.getindexblocksbehind()
+    if blocks_behind > 5:
+        raise BackendError('Indexd is running {} blocks behind.'.format(blocks_behind))
+
     logger.debug('Backend state check passed.')
 
 class DatabaseError(Exception):
@@ -741,11 +747,11 @@ class APIServer(threading.Thread):
 
         @dispatcher.add_method
         def search_raw_transactions(address, unconfirmed=True):
-            return backend.searchrawtransactions(address, unconfirmed=unconfirmed)
+            raise APIError('search_raw_transactions is no longer supported')
 
         @dispatcher.add_method
         def get_unspent_txouts(address, unconfirmed=False, unspent_tx_hash=None):
-            return backend.get_unspent_txouts(address, unconfirmed=unconfirmed, multisig_inputs=False, unspent_tx_hash=unspent_tx_hash)
+            return backend.get_unspent_txouts(address, unconfirmed=unconfirmed, unspent_tx_hash=unspent_tx_hash)
 
         @dispatcher.add_method
         def getrawtransaction(tx_hash, verbose=False, skip_missing=False):
